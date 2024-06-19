@@ -1,0 +1,29 @@
+FROM rccn-ros-cv-base
+LABEL maintainer "Chia Ching Yen <ccyen@umich.edu>"
+SHELL ["/bin/bash","-c"]
+ENV CATKIN_WS=/root/catkin_ws
+RUN mkdir -p $CATKIN_WS/src
+
+# Add robot packages to local catkin workspace
+RUN echo "Building ROS Raccoon CV" \
+    && source /opt/ros/${ROS_DISTRO}/setup.bash \
+    # Update apt-get because its cache is always cleared after installs to keep image size down
+    && apt-get update\
+    # ROS File Server
+    && git clone https://github.com/gramaziokohler/ros_file_server.git \
+    && git clone https://github.com/rccn-dev/kuka_kr300_support.git \
+    && git clone https://github.com/rccn-dev/kuka_robot_driver_interfaces.git \
+    && git clone https://github.com/rccn-dev/rccn_robot_cell.git \
+    # Official packages
+    && git clone https://github.com/ros-planning/moveit_calibration.git \
+    && git clone https://github.com/introlab/rtabmap_ros.git \
+    # Install dependencies
+    && cd $CATKIN_WS \
+    && rosdep install -y --from-paths . --ignore-src --rosdistro ${ROS_DISTRO} \
+    # Build catkin workspace
+    && catkin_make \
+    && rm -rf /var/lib/apt/lists/*
+
+# RUN VNC
+ADD ./entrypoint.sh /entrypoint.sh
+ENTRYPOINT /entrypoint.sh
