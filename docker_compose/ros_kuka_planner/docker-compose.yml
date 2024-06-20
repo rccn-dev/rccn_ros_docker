@@ -1,0 +1,51 @@
+services:
+  rccn-roscore:
+    image: rccn-ros-kuka-planner
+    profiles: [core, gui]
+    container_name: rccn-roscore
+    ports:
+      - "11311:11311"
+    depends_on:
+      - novnc
+    command:
+      - roscore
+    networks:
+      - ros
+
+  rccn-ros-kuka-planner:
+    image: rccn-ros-kuka-planner
+    profiles: [core]
+    container_name: rccn-ros-kuka-planner
+    environment:
+      - DISPLAY=novnc:0.0
+      - ROS_MASTER_URI=http://rccn-roscore:11311
+    ports:
+      - "9090:9090"
+    depends_on:
+      - rccn-roscore
+      - novnc
+    command:
+      - roslaunch
+      - --wait
+      - compas_fab_backend
+      - east_robot.launch
+    networks:
+      - ros
+
+  novnc:
+    image: theasp/novnc:latest
+    profiles: [gui]
+    container_name: novnc
+    environment:
+      - DISPLAY_WIDTH=1920
+      - DISPLAY_HEIGHT=1080
+      - RUN_XTERM=no
+    ports:
+      - "8080:8080"
+    networks:
+      - ros
+
+networks:
+  ros:
+    name: ros
+    driver: bridge
