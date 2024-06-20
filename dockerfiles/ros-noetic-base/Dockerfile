@@ -1,11 +1,13 @@
+# Description: This Dockerfile creates a ROS Noetic base image with the following packages:
+# 1. ros-noetic-rosbridge-server
+# 2. ros-noetic-moveit
+# 3. ros-noetic-moveit-resources-prbt-moveit-config
+
 # Build:
-#  docker build --rm -f Dockerfile -t gramaziokohler/ros-noetic-base:${TAG} .
-#
-# Usage:
-#  docker pull gramaziokohler/ros-noetic-base
+#  docker buildx build --rm -f Dockerfile -t rccn-ros-noetic-base . 
 
 FROM ros:noetic
-LABEL maintainer "Gonzalo Casas <casas@arch.ethz.ch>"
+LABEL maintainer "Chia-Ching Yen <ccyen@umich.edu>"
 
 SHELL ["/bin/bash","-c"]
 
@@ -20,9 +22,16 @@ RUN apt-get update \
     net-tools \ 
     iputils-ping \
     dnsutils \
+    # ROS catkin tools
+    python3-catkin-tools \
+    ros-${ROS_DISTRO}-catkin \
     # ROS bridge server and related packages
     ros-${ROS_DISTRO}-rosbridge-server \
+    # ROS MoveIt
+    ros-${ROS_DISTRO}-moveit \
+    ros-${ROS_DISTRO}-moveit-resources-prbt-moveit-config \
     # ros-${ROS_DISTRO}-tf2-web-republisher   # NOT yet published?   \
+    --fix-missing \
     --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
@@ -33,14 +42,14 @@ WORKDIR $CATKIN_WS/src
 
 # Initialize local catkin workspace
 RUN source /opt/ros/${ROS_DISTRO}/setup.bash \
-    && apt-get update \
+    # && apt-get update  # Seems like this is not necessary \
     # ROS File Server
     && git clone https://github.com/gramaziokohler/ros_file_server.git \
     # Install dependencies
     && cd $CATKIN_WS \
     && rosdep install -y --from-paths . --ignore-src --rosdistro ${ROS_DISTRO} \
     # Build catkin workspace
-    && catkin_make
+    && catkin build
 
 # Always source ros_catkin_entrypoint.sh when launching bash (e.g. when attaching to container)
 RUN echo "source /usr/local/bin/ros_catkin_entrypoint.sh" >> /root/.bashrc
