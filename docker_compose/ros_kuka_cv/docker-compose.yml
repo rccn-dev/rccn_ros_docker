@@ -1,0 +1,31 @@
+services:
+  rccn-roscore:
+    image: rccn-ros-kuka-cv
+    container_name: rccn-roscore
+    ports:
+      - "11311:11311"
+    environment:
+      - DISPLAY=novnc:0.0
+    depends_on:
+      - novnc
+    command:
+      - roscore
+    networks:
+      - ros
+
+  novnc:
+    image: theasp/novnc:latest
+    container_name: novnc
+    environment:
+      - DISPLAY_WIDTH=1920
+      - DISPLAY_HEIGHT=1080
+      - RUN_XTERM=no
+    ports:
+      - "8080:8080"
+    networks:
+      - ros
+
+networks:
+  ros:
+    name: ros
+    driver: bridge
