@@ -1,10 +1,12 @@
 services:
-  rccn-roscore:
+  rccn-roscore-vnc:
     image: rccn-ros-kuka-planner
-    profiles: [core, gui]
+    profiles: [ gui ]
     container_name: rccn-roscore
     ports:
       - "11311:11311"
+    environment:
+      - DISPLAY=novnc:0.0
     depends_on:
       - novnc
     command:
@@ -12,18 +14,27 @@ services:
     networks:
       - ros
 
+  rccn-roscore:
+    image: rccn-ros-kuka-planner
+    profiles: [ core ]
+    container_name: rccn-roscore
+    ports:
+      - "11311:11311"
+    command:
+      - roscore
+    networks:
+      - ros
+
   rccn-ros-kuka-planner:
     image: rccn-ros-kuka-planner
-    profiles: [core]
+    profiles: [ core ]
     container_name: rccn-ros-kuka-planner
     environment:
-      - DISPLAY=novnc:0.0
       - ROS_MASTER_URI=http://rccn-roscore:11311
     ports:
       - "9090:9090"
     depends_on:
       - rccn-roscore
-      - novnc
     command:
       - roslaunch
       - --wait
@@ -34,7 +45,7 @@ services:
 
   novnc:
     image: theasp/novnc:latest
-    profiles: [gui]
+    profiles: [ gui ]
     container_name: novnc
     environment:
       - DISPLAY_WIDTH=1920
