@@ -39,7 +39,7 @@ services:
       - roslaunch
       - --wait
       - compas_fab_backend
-      - east_robot.launch
+      - west_robot.launch
     networks:
       - ros
 
